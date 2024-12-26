@@ -1,7 +1,7 @@
 const express = require('express');
-const { loginAdmin, createUser, updateUser, deleteUser,sendVerification, verifyCode, addUser, loginUser,getUser } = require('../controller/userController');
+const { loginAdmin, createUser, updateUser, deleteUser,sendVerification, verifyCode, addUser, loginUser,getUser, getAllUser } = require('../controller/userController');
 const { getLocation } = require('../controller/location');
-const { addTuyenXe, getAllTuyenXe, deleteTuyenXe, updateTuyenXe ,getAllTinhThanh,getDiaDiem, getAllChuyenXe, getAllVTCho} = require('../controller/tuyenXeController');
+const { addTuyenXe, getAllTuyenXe, deleteTuyenXe, updateTuyenXe,getAllXe ,getAllTinhThanh,addChuyenXe, getChuyenTheoTuyen,getDiaDiem, getAllChuyenXe, getAllVTCho, getAllTaiXe} = require('../controller/tuyenXeController');
 const {DatVe,addTicket } = require('../controller/VeController')
 const router = express.Router();
 
@@ -16,6 +16,8 @@ router.post('/send-verification',sendVerification);
 router.post('/verify-code', verifyCode); 
 router.post('/loginUser', loginUser); 
 router.post('/getUser', getUser); 
+router.get('/getAllUser', getAllUser); 
+
 // Định nghĩa các route khác
 
 // lấy địa điểm
@@ -33,6 +35,10 @@ router.put('/updateTuyenXe/:id', updateTuyenXe);
 
 router.post('/DatVe',DatVe);
 router.post('/addTicket',addTicket);
+router.post('/addChuyenXe',addChuyenXe);
+router.post('/getChuyenTheoTuyen',getChuyenTheoTuyen);
+router.get('/getAllTaiXe',getAllTaiXe);
+router.get('/getAllXe',getAllXe);
 
   
 

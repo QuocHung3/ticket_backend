@@ -56,13 +56,16 @@ const createUser = (req, res) => {
   
 
 const updateUser = (req, res) => {
-  const { email, sdt, ten, ID_quyen } = req.body;
+  const { email, sdt, ten,matkhau } = req.body;
   const { id } = req.params;
-  console.log(id);
+
+  console.log(req.body ,id);
   db.query(
-    `UPDATE nguoidung SET email = '${email}', sdt = '${sdt}', ten = '${ten}', ID_quyen = '${ID_quyen}' WHERE ID_nguoidung = '${id}'`,
+    `UPDATE nguoidung SET Email = '${email}', SDT = '${sdt}', Ten = '${ten}',MatKhau = '${matkhau}',ID_Quyen = 5  
+    WHERE ID_NguoiDung = ${id}`,
     (err, result) => {
       if (err) {
+        console.log(err)
         res.status(500).json({ message: err });
         return;
       }
@@ -84,7 +87,7 @@ const updateUser = (req, res) => {
 const deleteUser = (req, res) => {
   const { id } = req.params;
   db.query(
-    `DELETE FROM nguoidung WHERE ID_nguoidung = '${id}'`,
+    `DELETE FROM nguoidung WHERE ID_NguoiDung = '${id}'`,
     (err, result) => {
       if (err) {
         res.status(500).json({ message: err });
@@ -227,6 +230,32 @@ const deleteUser = (req, res) => {
     }
   };
 
+  const getAllUser = async (req, res) => {
+    try {
+      const query = `SELECT n.ID_NguoiDung,n.Email,n.SDT,n.Ten,n.MatKhau,q.ID_Quyen,q.Ten_Quyen
+            FROM nguoidung as n
+            INNER JOIN quyen as q ON n.ID_Quyen = q.ID_Quyen;`
+      db.query(query, (err, result) => {
+        if (err) {
+          res.status(500).json({ message: err.message });
+          return;
+        }
+        if (result.length > 0) {
+          res.status(200).json({
+            data: result,
+            message: "Lấy danh sách người dùng thành công",
+          });
+        } else {
+          res.status(404).json({
+            message: "Không có người dùng nào",
+          });
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+    }
+  };
+
 module.exports = {
   loginAdmin,
   createUser,
@@ -236,5 +265,6 @@ module.exports = {
   verifyCode,
   addUser,
   loginUser,
-  getUser
+  getUser,
+  getAllUser
 };

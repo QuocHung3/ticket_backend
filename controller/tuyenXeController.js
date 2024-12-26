@@ -4,12 +4,12 @@ const addTuyenXe = async (req, res) => {
   try {
     const { diemDi, diemDen, tenTuyenDi, KhoangCach } = req.body;
 
-    // Kiểm tra xem dữ liệu có hợp lệ không
+    console.log(req.body)
+
     if (!diemDi || !diemDen || !tenTuyenDi || !KhoangCach) {
       return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
     }
 
-    // Sử dụng câu lệnh SQL với dấu hỏi thay vì chèn trực tiếp chuỗi
     const query = `
       INSERT INTO TuyenXe (TenTuyenXe, DiemDi, DiemDen, KhoangCach) 
       VALUES (?, ?, ?, ?)
@@ -18,6 +18,7 @@ const addTuyenXe = async (req, res) => {
     // Truyền các giá trị vào câu lệnh
     db.query(query, [tenTuyenDi, diemDi, diemDen, KhoangCach], (err, result) => {
       if (err) {
+        console.log(err)
         res.status(500).json({ message: err.message });
         return;
       }
@@ -28,6 +29,7 @@ const addTuyenXe = async (req, res) => {
         });
         return;
       } else {
+        console.log(err)
         res.status(400).json({
           message: "Không thể thêm tuyến xe",
         });
@@ -206,7 +208,7 @@ const updateTuyenXe = async (req, res) => {
 
     const getDiaDiem = async (req, res) => {
       try {
-        console.log(req.body.diaDiem)
+        console.log(req.body)
         const query = `SELECT tinhthanh.ID_TinhThanh,tinhthanh.TenTinhThanh, quanhuyen.ID_QuanHuyen,quanhuyen.TenQuanHuyen
               FROM tinhthanh
               INNER JOIN quanhuyen ON tinhthanh.ID_TinhThanh = quanhuyen.ID_TinhThanh
@@ -231,6 +233,126 @@ const updateTuyenXe = async (req, res) => {
         res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
       }
     };
+
+    const getChuyenTheoTuyen = async (req, res) => {
+      try {
+        if(!req.body.id) return;
+
+        const query = `SELECT v.ID_TuyenXe, v.TenTuyenXe, v.DiemDi, c.NgayDi, c.GioDi, count(ch.trangThaiCho) AS GheConTrong
+          FROM chuyenxe c
+          INNER JOIN tuyenxe v ON c.ID_TuyenXe = v.ID_TuyenXe
+          INNER JOIN loaiXe d ON c.ID_Xe = d.ID_Xe
+          INNER JOIN vitricho ch ON d.ID_Xe = ch.ID_Xe
+          WHERE v.ID_TuyenXe = ?
+          group by c.ID_ChuyenXe`;
+        db.query(query,[req.body.id] ,(err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách chỗ thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có chỗ nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
+    const getAllTaiXe = async (req, res) => {
+      try {
+        const query = `select * from taixe`;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách tài xế thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có tài xế nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
+
+    const addChuyenXe = async (req, res) => {
+      try {
+        const { ngaydi, ngayden, giodi, gioden,id_xe,id_tuyenxe,id_taixe } = req.body;
+    
+      
+        if (!ngaydi || !ngayden || !giodi || !gioden || !id_xe || !id_tuyenxe || !id_taixe  ) {
+          return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+        }
+    
+        const query = `
+          INSERT INTO chuyenxe (NgayDi, NgayDen, GioDi, GioDen, ID_Xe,ID_TuyenXe,ID_TaiXe) 
+          VALUES (?, ?, ?, ?,?,?,?)`;
+    
+        // Truyền các giá trị vào câu lệnh
+        db.query(query, [ngaydi, ngayden, giodi, gioden,id_xe,id_tuyenxe,id_taixe], (err, result) => {
+          if (err) {
+            console.log(err)
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.affectedRows != 0) {
+            res.status(200).json({
+              data: result,
+              message: "Thêm chuyến xe thành công",
+            });
+            return;
+          } else {
+            console.log(err)
+            res.status(400).json({
+              message: "Không thể thêm chuyến xe",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
+    const getAllXe = async (req, res) => {
+      try {
+        const query = `select * from loaixe`;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách xe thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có xe nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
 module.exports = {
   addTuyenXe,
   getAllTuyenXe,
@@ -239,5 +361,9 @@ module.exports = {
   getAllTinhThanh,
   getAllChuyenXe,
   getAllVTCho,
-  getDiaDiem
+  getDiaDiem,
+  getChuyenTheoTuyen,
+  getAllTaiXe,
+  addChuyenXe,
+  getAllXe
 };

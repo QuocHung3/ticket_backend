@@ -59,7 +59,7 @@ const updateUser = (req, res) => {
   const { email, sdt, ten,matkhau } = req.body;
   const { id } = req.params;
 
-  console.log(req.body ,id);
+
   db.query(
     `UPDATE nguoidung SET Email = '${email}', SDT = '${sdt}', Ten = '${ten}',MatKhau = '${matkhau}',ID_Quyen = 5  
     WHERE ID_NguoiDung = ${id}`,
@@ -202,6 +202,7 @@ const deleteUser = (req, res) => {
   const getUser = async (req, res) => {
     const {idUser} = req.body;
     try {
+      console.log(idUser)
       if(!idUser) {
         res.status(404).json({
           message: "Không có id người dùng",
@@ -256,6 +257,38 @@ const deleteUser = (req, res) => {
     }
   };
 
+  const getThongBao = async (req, res) => {
+    const {idUser} = req.body;
+    try {
+      if(!idUser) {
+        res.status(404).json({
+          message: "Không có id người dùng",
+        });
+        return;
+      }
+      
+      db.query(`SELECT * from thongbao where ID_NguoiDung = ?`,[idUser], (err, result) => {
+        if (err) {
+          console.log(err)
+          res.status(500).json({ message: err.message });
+          return;
+        }
+        if (result.length > 0) {
+          res.status(200).json({
+            data: result,
+            message: "Lấy danh sách thông báo thành công",
+          });
+        } else {
+          res.status(404).json({
+            message: "Không có thông báo",
+          });
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+    }
+  };
+
 module.exports = {
   loginAdmin,
   createUser,
@@ -266,5 +299,6 @@ module.exports = {
   addUser,
   loginUser,
   getUser,
-  getAllUser
+  getAllUser,
+  getThongBao
 };

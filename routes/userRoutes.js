@@ -2,7 +2,7 @@ const express = require('express');
 const { loginAdmin, createUser, updateUser, deleteUser,sendVerification, verifyCode, addUser, loginUser,getUser, getAllUser, getThongBao } = require('../controller/userController');
 const { getLocation } = require('../controller/location');
 const { addTuyenXe, getAllTuyenXe,addXe, deleteTuyenXe,deleteXe,getAllChoDat,getAllVe, deleteChuyenXe,getAllChuyen,updateTuyenXe,getAllXe ,getAllTinhThanh,addChuyenXe, getChuyenTheoTuyen,getDiaDiem, getAllChuyenXe, getAllVTCho, getAllTaiXe, updateXe} = require('../controller/tuyenXeController');
-const {DatVe,addTicket ,cancelTicket} = require('../controller/VeController')
+const {DatVe,addTicket , paymentSheet,cancelTicket, getVeTheoNguoiDung} = require('../controller/VeController')
 const router = express.Router();
 
 
@@ -49,6 +49,8 @@ router.get('/getAllVe',getAllVe);
 
 router.post('/cancelTicket',cancelTicket);
 router.post('/getThongBao',getThongBao);
+router.post('/getVeTheoNguoiDung',getVeTheoNguoiDung);
+router.post('/payment-sheet',paymentSheet);
 
   
 

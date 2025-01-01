@@ -42,7 +42,7 @@ const addTuyenXe = async (req, res) => {
 
 const getAllTuyenXe = async (req, res) => {
     try {
-      const query = "SELECT * FROM TuyenXe";
+      const query = "SELECT * FROM TuyenXe ORDER BY ID_TuyenXe DESC";
       db.query(query, (err, result) => {
         if (err) {
           res.status(500).json({ message: err.message });
@@ -68,6 +68,8 @@ const deleteTuyenXe = async (req, res) => {
   try {
     const { id } = req.params;
     const query = `DELETE FROM TuyenXe WHERE ID_TuyenXe = '${id}'`;
+
+    
     db.query(query, (err, result) => {
         if (err) {
           res.status(500).json({ message: err.message });
@@ -92,17 +94,18 @@ const deleteTuyenXe = async (req, res) => {
 
   const updateTuyenXe = async (req, res) => {
     try {
-        const { tenTuyenDi, huyenDiemDi, huyenDiemDen, khoangCach } = req.body;
+        const { tenTuyenDi, diemDi, diemDen, khoangCach } = req.body;
         const { id } = req.params;
-        console.log(id);
-        console.log(req.body);
+
+        console.log(id, req.body)
         const query = `
         UPDATE TuyenXe 
         SET TenTuyenXe = ?, DiemDi = ?, DiemDen = ?, KhoangCach = ?
         WHERE ID_TuyenXe = ?
         `;
-        db.query(query, [tenTuyenDi, huyenDiemDi, huyenDiemDen, khoangCach, id], (err, result) => {
+        db.query(query, [tenTuyenDi, diemDi, diemDen, khoangCach, id], (err, result) => {
         if (err) {
+            console.log(err)
             res.status(500).json({ message: err.message });
             return;
         }
@@ -148,18 +151,22 @@ const deleteTuyenXe = async (req, res) => {
     };
 
     const getAllChuyenXe = async (req, res) => {
+      
+      console.log(req.body)
       try{
-        if(!req.body) return;
 
-        const query = `SELECT c.ID_ChuyenXe, c.GioDi,d.SoXe, c.GioDen,d.ID_Xe, MIN(ch.GiaVe) AS GiaVeMin, MAX(ch.GiaVe) AS GiaVeMax, 
+        if(!req.body) return;
+        const query = `SELECT c.ID_ChuyenXe, c.GioDi,c.NgayDi ,d.SoXe, c.GioDen,d.ID_Xe, MIN(ch.GiaVe) AS GiaVeMin, MAX(ch.GiaVe) AS GiaVeMax, 
        count(ch.trangThaiCho) AS GheConTrong
           FROM chuyenxe c
           INNER JOIN tuyenxe v ON c.ID_TuyenXe = v.ID_TuyenXe
           INNER JOIN loaiXe d ON c.ID_Xe = d.ID_Xe
           INNER JOIN vitricho ch ON d.ID_Xe = ch.ID_Xe
-          WHERE v.DiemDi = ?
-          GROUP BY c.ID_ChuyenXe`;
-        db.query(query,[req.body.diemdi], (err, result) => {
+          WHERE v.DiemDi = ? and v.DiemDen = ? and c.NgayDi = ? and ch.trangThaiCho = "còn trống"
+          GROUP BY c.ID_ChuyenXe
+          ORDER BY c.NgayDi DESC
+          `;
+        db.query(query,[req.body.diemdi,req.body.diemden, req.body.ngayKhoiHanh], (err, result) => {
           if (err) {
             console.log(err)
             res.status(500).json({ message: err.message });
@@ -249,7 +256,9 @@ const deleteTuyenXe = async (req, res) => {
                   (SELECT COUNT(*) FROM vitricho ch WHERE ch.ID_Xe = c.ID_Xe AND ch.TrangThaiCho = 'còn trống') AS GheConTrong
                   FROM chuyenxe c
                   INNER JOIN tuyenxe v ON c.ID_TuyenXe = v.ID_TuyenXe
-                  WHERE v.ID_TuyenXe = ?`;
+                  WHERE v.ID_TuyenXe = ?
+                  ORDER BY c.ID_ChuyenXe DESC
+                  `;
         db.query(query,[req.body.id] ,(err, result) => {
           if (err) {
             res.status(500).json({ message: err.message });
@@ -336,7 +345,7 @@ const deleteTuyenXe = async (req, res) => {
 
     const getAllXe = async (req, res) => {
       try {
-        const query = `select * from loaixe`;
+        const query = `select * from loaixe ORDER BY ID_Xe DESC`;
         db.query(query, (err, result) => {
           if (err) {
             res.status(500).json({ message: err.message });
@@ -410,7 +419,7 @@ const deleteTuyenXe = async (req, res) => {
 
     const getAllChoDat = async (req, res) => {
       try {
-        const query = `SELECT * FROM vitricho where TrangThaiCho != "còn trống" `;
+        const query = `SELECT * FROM vitricho where TrangThaiCho != "còn trống" ORDER BY ID_Cho DESC`;
         db.query(query, (err, result) => {
           if (err) {
             res.status(500).json({ message: err.message });

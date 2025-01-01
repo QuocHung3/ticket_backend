@@ -235,7 +235,8 @@ const deleteUser = (req, res) => {
     try {
       const query = `SELECT n.ID_NguoiDung,n.Email,n.SDT,n.Ten,n.MatKhau,q.ID_Quyen,q.Ten_Quyen
             FROM nguoidung as n
-            INNER JOIN quyen as q ON n.ID_Quyen = q.ID_Quyen;`
+            INNER JOIN quyen as q ON n.ID_Quyen = q.ID_Quyen 
+            ORDER BY ID_NguoiDung DESC`
       db.query(query, (err, result) => {
         if (err) {
           res.status(500).json({ message: err.message });

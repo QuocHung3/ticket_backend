@@ -1,5 +1,6 @@
 const db = require("../model/db");
 const nodemailer = require('nodemailer');
+const stripe = require('stripe')('sk_test_51QcQOUJBpWVJbeYZZAyiOVUXNGrPQPy0nKmmPoov29xeZ7LfszmZr59m9oxM6muXnkhwlY0VyVuXPqO8qTM2c68m00gfhXaqkS');
 
 const codes = new Map(); 
 
@@ -84,6 +85,7 @@ const executeQuery = (query, params) => {
 };
 
 const addTicket = async (req, res) => {
+
   try {
     // 1. Cập nhật trạng thái chỗ
     const updateSeats = async () => {
@@ -133,7 +135,7 @@ const addTicket = async (req, res) => {
       req.body.diemDon,
       req.body.diemTra,
       req.body.sdt,
-      req.body.ghiChu,
+      req.body.ghiChu + "\n" + req.body.donTai,
       req.body.code,
     ]);
 
@@ -154,11 +156,11 @@ const addTicket = async (req, res) => {
         Thông tin chuyến xe đi của bạn:
         Mã chuyến xe: ${req.body.code}
         Mã số xe: ${req.body.soXe}
-        Số ghế: ${req.body.soGheV}
+        Số ghế: ${req.body.viTriCho}
         Nơi đi: ${req.body.noiDen}
         Nơi đến: ${req.body.noiDi}
-        Điểm đón: ${req.body.diemDonV}
-        Điểm trả: ${req.body.diemTraV}
+        Điểm đón: ${req.body.diemDon}
+        Điểm trả: ${req.body.diemTra}
         Số ĐT xe: ${req.body.sdt}
         Thanh toán: ${req.body.trangThaiThanhToan}
         Kiểm tra thông tin đúng trước khi lên xe, chúc quý khách thượng lộ bình an!
@@ -170,9 +172,9 @@ const addTicket = async (req, res) => {
         Thông tin chuyến xe đi của bạn:
         Mã chuyến xe: ${req.body.code}
         Mã số xe: ${req.body.soXe}
-        Số ghế: ${req.body.soGhe}
-        Nơi đi: ${req.body.noiDi}
-        Nơi đến: ${req.body.noiDen}
+        Số ghế: ${req.body.viTriCho}
+        Nơi đi: ${req.body.noiDen}
+        Nơi đến: ${req.body.noiDi}
         Điểm đón: ${req.body.diemDon}
         Điểm trả: ${req.body.diemTra}
         Số ĐT xe: ${req.body.sdt}
@@ -181,11 +183,11 @@ const addTicket = async (req, res) => {
         Thông tin chuyến xe đi của bạn:
         Mã chuyến xe: ${req.body.code}
         Mã số xe: ${req.body.soXeV}
-        Số ghế: ${req.body.soGhe}
-        Nơi đi: ${req.body.noiDi}
-        Nơi đến: ${req.body.noiDen}
-        Điểm đón: ${req.body.diemDon}
-        Điểm trả: ${req.body.diemTra}
+        Số ghế: ${req.body.soGheV}
+        Nơi đi: ${req.body.noiDen}
+        Nơi đến: ${req.body.noiDi}
+        Điểm đón: ${req.body.diemDonV}
+        Điểm trả: ${req.body.diemTraV}
         Số ĐT xe: ${req.body.sdt}
         Thanh toán: ${req.body.trangThaiThanhToan}
 
@@ -206,9 +208,11 @@ const addTicket = async (req, res) => {
       timestamp: Date.now(),
     });
 
-    
     if(!req.body.id_chuyenXeV) {
-      return;
+      return res.status(200).json({
+        message: "Thêm vé xe thành công và email đã được gửi",
+        data: result,
+      });
     }
 
     const updateSeatsV = async () => {
@@ -252,7 +256,7 @@ const addTicket = async (req, res) => {
       req.body.diemDonV,
       req.body.diemTraV,
       req.body.sdt,
-      req.body.ghiChu,
+      req.body.ghiChu + "\n" + req.body.donTai,
       req.body.code,
     ]);
 
@@ -336,8 +340,58 @@ const cancelTicket = async (req, res) => {
   }
 };
 
+const getVeTheoNguoiDung = async (req, res) => {
+  console.log(req.body)
+  try {
+    const query = `SELECT *
+          FROM ve where ID_NguoiDung = ?`
+    db.query(query,[req.body.id], (err, result) => {
+      if (err) {
+        console.log(err)
+        res.status(500).json({ message: err.message });
+        return;
+      }
+      if (result.length > 0) {
+        res.status(200).json({
+          data: result,
+          message: "Lấy danh sách vé thành công",
+        });
+      } else {
+        console.log(err)
+        res.status(404).json({
+          message: "Không có vé nào",
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+  }
+};
+
+const paymentSheet = async (req, res) => {
+  const { giaVe } = req.body
+  try {
+    const customer = await stripe.customers.create();
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: giaVe && giaVe >= 500000 ? giaVe : 500000, // Số tiền (2000 = $20.00)
+      currency: 'vnd',
+      customer: customer.id,
+      payment_method_types: ['card'], // Chỉ dùng thẻ
+    });
+
+    res.json({
+      paymentIntent: paymentIntent.client_secret,
+    });
+  } catch (error) {
+    console.error('Lỗi thanh toán:', error);
+    res.status(500).send({ error: "Lỗi thanh toán!" });
+  }
+}
+
 module.exports = {
   DatVe,
   addTicket,
-  cancelTicket
+  cancelTicket,
+  getVeTheoNguoiDung,
+  paymentSheet
 };

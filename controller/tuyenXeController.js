@@ -395,7 +395,12 @@ const deleteTuyenXe = async (req, res) => {
 
     const getAllChuyen = async (req, res) => {
       try {
-        const query = `SELECT * FROM chuyenxe `;
+        const query = `SELECT t.ID_TuyenXe, c.ID_ChuyenXe, t.TenTuyenXe, t.DiemDi, t.DiemDen, t.KhoangCach,
+                    c.NgayDi, c.NgayDen, c.GioDi, c.GioDen, c.ID_Xe, c.ID_TaiXe
+                    FROM tuyenxe t
+                    INNER JOIN chuyenxe c ON t.ID_TuyenXe = c.ID_TuyenXe
+                    ORDER BY c.ID_ChuyenXe DESC
+                    `;
         db.query(query, (err, result) => {
           if (err) {
             res.status(500).json({ message: err.message });

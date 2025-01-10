@@ -1,7 +1,7 @@
 const express = require('express');
 const { loginAdmin, createUser, updateUser, deleteUser,sendVerification, verifyCode, addUser, loginUser,getUser, getAllUser, getThongBao } = require('../controller/userController');
 const { getLocation } = require('../controller/location');
-const { addTuyenXe, getAllTuyenXe,addXe, deleteTuyenXe,deleteXe,getAllChoDat,getAllVe, deleteChuyenXe,getAllChuyen,updateTuyenXe,getAllXe ,getAllTinhThanh,addChuyenXe, getChuyenTheoTuyen,getDiaDiem, getAllChuyenXe, getAllVTCho, getAllTaiXe, updateXe} = require('../controller/tuyenXeController');
+const { addTuyenXe, getAllTuyenXe,addXe, deleteTuyenXe,deleteXe, getAllVeDatTheoNgay,getAllChoDat,getAllVe, deleteChuyenXe,getAllChuyen,updateTuyenXe,getAllXe ,getAllTinhThanh,addChuyenXe, getChuyenTheoTuyen,getDiaDiem, getAllChuyenXe, getAllVTCho, getAllTaiXe, updateXe, getTongChoDat, getAllVeTheoTuyen, getAllDoanhThuTheoTuyen, getAllChuyenTrongThang} = require('../controller/tuyenXeController');
 const {DatVe,addTicket , paymentSheet,cancelTicket, getVeTheoNguoiDung} = require('../controller/VeController')
 const router = express.Router();
 
@@ -45,7 +45,12 @@ router.get('/getAllTaiXe',getAllTaiXe);
 router.get('/getAllXe',getAllXe);
 router.get('/getAllChuyen',getAllChuyen);
 router.get('/getAllChoDat',getAllChoDat);
+router.get('/getTongChoDat',getTongChoDat);
 router.get('/getAllVe',getAllVe);
+router.get('/getAllVeTheoTuyen',getAllVeTheoTuyen);
+router.get('/getAllDoanhThuTheoTuyen',getAllDoanhThuTheoTuyen);
+router.get('/getAllChuyenTrongThang',getAllChuyenTrongThang);
+router.get('/getAllVeDatTheoNgay',getAllVeDatTheoNgay);
 
 router.post('/cancelTicket',cancelTicket);
 router.post('/getThongBao',getThongBao);

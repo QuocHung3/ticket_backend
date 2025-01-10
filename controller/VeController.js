@@ -278,6 +278,7 @@ const addTicket = async (req, res) => {
 };
 
 const cancelTicket = async (req, res) => {
+  console.log(req.body)
   try {
     // 1. Cập nhật trạng thái chỗ
     const updateSeats = async () => {

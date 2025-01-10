@@ -399,6 +399,8 @@ const deleteTuyenXe = async (req, res) => {
                     c.NgayDi, c.NgayDen, c.GioDi, c.GioDen, c.ID_Xe, c.ID_TaiXe
                     FROM tuyenxe t
                     INNER JOIN chuyenxe c ON t.ID_TuyenXe = c.ID_TuyenXe
+                    where MONTH(c.NgayDi) = MONTH(CURDATE())
+                          AND YEAR(c.NgayDi) = YEAR(CURDATE())
                     ORDER BY c.ID_ChuyenXe DESC
                     `;
         db.query(query, (err, result) => {
@@ -424,7 +426,40 @@ const deleteTuyenXe = async (req, res) => {
 
     const getAllChoDat = async (req, res) => {
       try {
-        const query = `SELECT * FROM vitricho where TrangThaiCho != "còn trống" ORDER BY ID_Cho DESC`;
+        const query = `SELECT * FROM vitricho where TrangThaiCho != "còn trống"  ORDER BY ID_Cho DESC`;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách chuyến xe thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có Chuyến xe nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
+    const getTongChoDat = async (req, res) => {
+      try {
+        const query = `SELECT
+                          count(vt.vitricho) AS TongSoChoDat
+                      FROM
+                          ve v
+                      INNER JOIN chuyenxe c ON v.ID_ChuyenXe = c.ID_ChuyenXe
+                      INNER JOIN loaixe l ON c.ID_Xe = l.ID_Xe
+                      INNER JOIN vitricho vt ON l.ID_Xe = vt.ID_Xe
+                      WHERE
+                          c.NgayDi BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+                          AND vt.TrangThaiCho = 'Đã đặt'`;
         db.query(query, (err, result) => {
           if (err) {
             res.status(500).json({ message: err.message });
@@ -451,7 +486,9 @@ const deleteTuyenXe = async (req, res) => {
         const query = `SELECT v.*, l.*
               FROM ve v
               INNER JOIN chuyenxe c ON v.ID_ChuyenXe = c.ID_ChuyenXe
-              INNER JOIN loaixe l ON c.ID_Xe = l.ID_Xe;`;
+              INNER JOIN loaixe l ON c.ID_Xe = l.ID_Xe
+              order by v.ID_Ve desc
+              `;
         db.query(query, (err, result) => {
           if (err) {
             res.status(500).json({ message: err.message });
@@ -568,7 +605,141 @@ const deleteTuyenXe = async (req, res) => {
         console.log(error)
           res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
       }
-      };
+    };
+
+    const getAllVeTheoTuyen = async (req, res) => {
+      try {
+        const query = `SELECT
+                t.TenTuyenXe,
+                COUNT(*) AS SoLuongVeDaDat
+            FROM
+                ve v
+            INNER JOIN chuyenxe c ON v.ID_ChuyenXe = c.ID_ChuyenXe
+            INNER JOIN tuyenxe t ON c.ID_TuyenXe = t.ID_TuyenXe
+            WHERE
+                v.TrangThaiVe = 'Đã đặt' 
+            GROUP BY
+                t.TenTuyenXe;
+              `;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách vé thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có vé nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
+    const getAllDoanhThuTheoTuyen = async (req, res) => {
+      try {
+        const query = `SELECT
+                      t.TenTuyenXe,
+                      SUM(v.SoTien) AS TongDoanhThu
+                  FROM
+                      ve v
+                  INNER JOIN chuyenxe c ON v.ID_ChuyenXe = c.ID_ChuyenXe
+                  INNER JOIN tuyenxe t ON c.ID_TuyenXe = t.ID_TuyenXe
+                  WHERE
+                      v.TrangThaiVe = 'Đã đặt'
+                  GROUP BY
+                      t.TenTuyenXe;
+              `;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách vé thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có vé nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    };
+
+    const getAllChuyenTrongThang = async (req, res) => {
+      try {
+        const query = `SELECT COUNT(*) AS SoLuongChuyen
+                      FROM chuyenxe
+                      WHERE YEAR(NgayDi) = YEAR(CURDATE())
+                        AND MONTH(NgayDi) = MONTH(CURDATE());`;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách chuyến xe thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có Chuyến xe nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    }; 
+
+    const getAllVeDatTheoNgay = async (req, res) => {
+      try {
+        const query = `SELECT
+                  c.ID_ChuyenXe,
+                  c.NgayDi,
+                  COUNT(CASE WHEN v.TrangThaiCho = 'Đã đặt' THEN 1 END) AS SoVeDaDat,
+                  COUNT(CASE WHEN v.TrangThaiCho = 'Đã hủy' THEN 1 END) AS SoVeDaHuy
+              FROM
+                  chuyenxe c
+              INNER JOIN vitricho v ON c.ID_Xe = v.ID_Xe
+              INNER JOIN loaixe l ON c.ID_Xe = l.ID_Xe
+              WHERE
+                  YEAR(c.NgayDi) = YEAR(CURDATE())
+                  AND MONTH(c.NgayDi) = MONTH(CURDATE())
+              GROUP BY
+                  c.ID_ChuyenXe, c.NgayDi;`;
+        db.query(query, (err, result) => {
+          if (err) {
+            res.status(500).json({ message: err.message });
+            return;
+          }
+          if (result.length > 0) {
+            res.status(200).json({
+              data: result,
+              message: "Lấy danh sách thành công",
+            });
+          } else {
+            res.status(404).json({
+              message: "Không có nào",
+            });
+          }
+        });
+      } catch (error) {
+        res.status(500).json({ message: 'Đã xảy ra lỗi', error: error.message });
+      }
+    }; 
 
 module.exports = {
   addTuyenXe,
@@ -589,5 +760,10 @@ module.exports = {
   getAllVe,
   addXe,
   deleteXe,
-  updateXe
+  updateXe,
+  getTongChoDat,
+  getAllVeTheoTuyen,
+  getAllDoanhThuTheoTuyen,
+  getAllChuyenTrongThang,
+  getAllVeDatTheoNgay
 };
